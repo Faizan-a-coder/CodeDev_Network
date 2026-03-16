@@ -47,7 +47,7 @@ const syncUserPlatforms = async (user) => {
       totalSolved,
       lastSyncedAt: new Date()
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   return stats;

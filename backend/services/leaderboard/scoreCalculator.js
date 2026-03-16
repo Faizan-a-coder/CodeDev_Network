@@ -26,7 +26,7 @@ const scoreCalculator = async (user)=>{
             },
             totalScore
         },
-        {new:true}
+        {returnDocument: 'after'}
         );
 
         
