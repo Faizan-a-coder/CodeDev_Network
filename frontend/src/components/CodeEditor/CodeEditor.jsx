@@ -10,7 +10,7 @@ export default function CodeEditor({ language, code, setCode }) {
       if (window.innerWidth <= 768) {
         setEditorHeight("350px");   // Mobile
       } else {
-        setEditorHeight("100%");    // Desktop
+        setEditorHeight("70%");    // Desktop
       }
     };
 

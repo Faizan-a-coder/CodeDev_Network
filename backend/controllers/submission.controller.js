@@ -2,18 +2,9 @@ import Problem from '../models/Problem.js';
 import Submission from '../models/Submission.js';
 import axios from 'axios';
 import { mapJudge0Verdict } from '../config/verdictMapper.js';
+import { languageMap } from '../config/languages.js';
+import { JUDGE0_URL } from '../config/judgeUrl.js';
 
-
-const JUDGE0_URL =
-  "http://localhost:2358/submissions?base64_encoded=false&wait=true";
-
-const languageMap = {
-  cpp: 54,
-  c: 50,
-  java: 62,
-  python: 71,
-  javascript: 63
-};
 
 const createSubmission = async (req, res) => {
   try {
@@ -55,7 +46,9 @@ const createSubmission = async (req, res) => {
         {
           source_code: code,
           language_id,
-          stdin: testcase.input
+          stdin: testcase.input,
+          cpu_time_limit: problem.timeLimit,
+          memory_limit: problem.memoryLimit
         },
         {
           headers: { "Content-Type": "application/json" }
@@ -109,110 +102,110 @@ const createSubmission = async (req, res) => {
 };
 
 const getSubmissions = async (req, res) => {
-    try {
-        const submissions = await Submission.find({ userId: req.user.id }).sort({ createdAt: -1 }).select("-code");
+  try {
+    const submissions = await Submission.find({ userId: req.user.id }).sort({ createdAt: -1 }).select("-code");
 
 
-        res.status(200).json({
-            success: true,
-            message: "submissions found",
-            count: submissions.length,
-            data: submissions
-        });
+    res.status(200).json({
+      success: true,
+      message: "submissions found",
+      count: submissions.length,
+      data: submissions
+    });
 
-    } catch (err) {
-        console.log(`An error occured ${err.message}`);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
+  } catch (err) {
+    console.log(`An error occured ${err.message}`);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 }
 
 const getOneSubmission = async (req, res) => {
-    try {
-        const submissionId = req.params.id;
+  try {
+    const submissionId = req.params.id;
 
-        const submission = await Submission.findById(submissionId);
+    const submission = await Submission.findById(submissionId);
 
-        //checking if submission exists or not
-        if (!submission) {
-            return res.status(404).json({
-                success: false,
-                message: "Submission not found",
-            });
-        }
-
-        //sending the submission if the logedIn user is admin
-        if (req.user.role === "admin") {
-            return res.status(200).json({
-                success: true,
-                message: "Submissions found",
-                data: submission
-            });
-        }
-
-        if (submission.userId.toString() !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: "Forbidden",
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Submission found",
-            data: submission
-        });
-    } catch (err) {
-        console.log(`An error occured ${err.message}`);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+    //checking if submission exists or not
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: "Submission not found",
+      });
     }
+
+    //sending the submission if the logedIn user is admin
+    if (req.user.role === "admin") {
+      return res.status(200).json({
+        success: true,
+        message: "Submissions found",
+        data: submission
+      });
+    }
+
+    if (submission.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Submission found",
+      data: submission
+    });
+  } catch (err) {
+    console.log(`An error occured ${err.message}`);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 }
 
 const getAllSubmissionsOfaProblem = async (req, res) => {
-    try {
-        const slug = req.params.slug;
+  try {
+    const slug = req.params.slug;
 
-        //finding the problem with given slug
-        const problem = await Problem.findOne({ slug });
+    //finding the problem with given slug
+    const problem = await Problem.findOne({ slug });
 
-        //checking if problem with given slug exists or not
-        if (!problem) {
-            return res.status(404).json({
-                success: false,
-                message: "Problem not found",
-            });
-        }
-
-        //finding the submissions attached with the problem
-        const submission = await Submission.find({ problemId: problem._id, userId: req.user.id }).sort({ createdAt: -1 }).select("-code");
-
-        //checking if submission exists or not
-        if (submission.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Submission not found"
-            });
-        }
-
-        //seding response
-        res.status(200).json({
-            success: true,
-            message: "Submission found",
-            data: submission
-        });
-
-    } catch (err) {
-        console.log(`An error occured ${err.message}`);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+    //checking if problem with given slug exists or not
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: "Problem not found",
+      });
     }
+
+    //finding the submissions attached with the problem
+    const submission = await Submission.find({ problemId: problem._id, userId: req.user.id }).sort({ createdAt: -1 }).select("-code");
+
+    //checking if submission exists or not
+    if (submission.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Submission not found"
+      });
+    }
+
+    //seding response
+    res.status(200).json({
+      success: true,
+      message: "Submission found",
+      data: submission
+    });
+
+  } catch (err) {
+    console.log(`An error occured ${err.message}`);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 }
 
 export { createSubmission, getOneSubmission, getSubmissions, getAllSubmissionsOfaProblem };

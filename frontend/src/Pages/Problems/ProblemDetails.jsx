@@ -6,6 +6,8 @@ import CodeEditor from "../../components/CodeEditor/CodeEditor";
 import "./ProblemDetails.css";
 import { createSubmission } from "../../api/submission.api";
 import Spinner from "../../components/Spinner/Spinner.jsx";
+import runCode from "../../api/codeRunner.api.js";
+
 
 export default function ProblemDetails() {
   //fetching url from context api
@@ -28,6 +30,9 @@ export default function ProblemDetails() {
   const [output, setOutput] = useState("");
   const [running, setRunning] = useState(false);
 
+
+  const [showResult, setShowResult] = useState(false);
+
   //function to call the problem details api
   const fetchProblemDetails = async () => {
     try {
@@ -42,7 +47,7 @@ export default function ProblemDetails() {
   };
 
   const boilerplates = {
-    java: `class Main {\n    public static void main(String[] args) {\n\n    }\n}`,
+    java: `import java.util.*;\nclass Main {\n    public static void main(String[] args) {\n\n    }\n}`,
     cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n\n}`,
     python: `def solve():\n    pass`,
   };
@@ -59,28 +64,53 @@ export default function ProblemDetails() {
 
   //submit button handler
   const submitHandler = async () => {
-  try {
-    setRunning(true);
+    try {
+      setRunning(true);
 
-    const payload = {
-      problemId: problemDetail._id,
-      code,
-      language
-    };
+      const payload = {
+        problemId: problemDetail._id,
+        code,
+        language
+      };
 
-    const response = await createSubmission(url, payload, token);
+      const response = await createSubmission(url, payload, token);
 
-    setVerdict(response.verdict);
-    setOutput(`Execution Time: ${response.executionTime}s`);
+      setVerdict(response.verdict);
+      setOutput(`Execution Time: ${response.executionTime}s`);
 
-  } catch (error) {
-    console.error(error);
-    setVerdict("Error");
-    setOutput("Something went wrong");
-  } finally {
-    setRunning(false);
-  }
-};  
+    } catch (error) {
+      console.error(error);
+      setVerdict("Error");
+      setOutput("Something went wrong");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  //handler to call the codeRunner function to only run the code
+  const runHandler = async () => {
+    try {
+      setRunning(true);
+
+      const payload = {
+        problemId: problemDetail._id,
+        code,
+        language
+      };
+
+      const response = await runCode(url, payload, token);
+
+      setVerdict(response.verdict);
+      setOutput(`Execution Time: ${response.executionTime}s`);
+
+    } catch (error) {
+      console.error(error);
+      setVerdict("Error");
+      setOutput("Something went wrong");
+    } finally {
+      setRunning(false);
+    }
+  };
 
 
   // Spinner
@@ -90,10 +120,11 @@ export default function ProblemDetails() {
 
   return (
     <div className="problem-details">
-      {/* Left: Problem Description */}
+      {/* Left */}
       <div className="problem-left">
         <h1>{problemDetail.title}</h1>
         <p>{problemDetail.description}</p>
+
         {problemDetail?.testCases?.map((test, index) => (
           <div className="testCase" key={index}>
             <h2>Input: {test.input}</h2>
@@ -103,9 +134,7 @@ export default function ProblemDetails() {
 
         <span>Topic Tags:</span>
         {problemDetail?.tags?.map((tag, index) => (
-          <span className="tag" key={index}>
-            {tag}{" "}
-          </span>
+          <span className="tag" key={index}>{tag}</span>
         ))}
 
         <div className="constraints">
@@ -113,7 +142,7 @@ export default function ProblemDetails() {
         </div>
       </div>
 
-      {/* Right: Code Editor */}
+      {/* Right */}
       <div className="problem-right">
         <div className="toolbar">
           <select
@@ -123,25 +152,56 @@ export default function ProblemDetails() {
             <option value="java">Java</option>
             <option value="cpp">C++</option>
           </select>
+
           <div className="run-submit-buttons">
-            <button className="run-btn" onClick={submitHandler}>Run</button>
-            <button className="submit-btn" onClick={submitHandler}>Submit</button>
+            <button
+              className="run-btn"
+              onClick={() => {
+                setShowResult(true);
+                runHandler();
+              }}
+            >
+              Run
+            </button>
+
+            <button
+              className="submit-btn"
+              onClick={() => {
+                setShowResult(true);
+                submitHandler();
+              }}
+            >
+              Submit
+            </button>
           </div>
         </div>
-        <div className="editor-info">
-          Code execution is under development. You will be able to run and
-          submit solutions soon.
-        </div>
         <CodeEditor language={language} code={code} setCode={setCode} />
-      </div>
-      <div className="execution-result">
-        {running && <p>Running...</p>}
 
-        {verdict && !running && (
-          <>
-            <h3>Verdict: {verdict}</h3>
-            <pre>{output}</pre>
-          </>
+        {/* Execution Panel */}
+        {showResult && (
+          <div className="execution-panel">
+            <div className="execution-header">
+              <span>Execution Result</span>
+
+              <button
+                className="close-result"
+                onClick={() => setShowResult(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="execution-result">
+              {running && <p>Running...</p>}
+
+              {verdict && !running && (
+                <>
+                  <h3>Verdict: {verdict}</h3>
+                  <pre>{output}</pre>
+                </>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

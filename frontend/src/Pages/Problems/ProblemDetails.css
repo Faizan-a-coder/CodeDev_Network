@@ -9,6 +9,7 @@
 }
 
 /* LEFT PANEL */
+
 .problem-left {
   width: 45%;
   overflow-y: auto;
@@ -18,11 +19,13 @@
 }
 
 /* RIGHT PANEL */
+
 .problem-right {
   width: 55%;
   display: flex;
   flex-direction: column;
   padding: 16px;
+  overflow: hidden;
 }
 
 /* =========================
@@ -80,9 +83,11 @@
   font-size: 13px;
 }
 
+/* editor should take remaining height */
+
 .editor-wrapper {
   flex: 1;
-  min-height: 300px;
+  min-height: 0;
 }
 
 /* =========================
@@ -125,26 +130,58 @@
   border-left: 3px solid #cfcfcf;
 }
 
-/* ========================
-  Code runner result
-============================*/
+/* =========================
+   EXECUTION PANEL
+========================= */
+
+.execution-panel {
+  background: #1f1f1f;
+  border-top: 2px solid #ffa116;
+  max-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.execution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #2d2d2d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.close-result {
+  background: transparent;
+  border: none;
+  color: #cfcfcf;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.close-result:hover {
+  color: #ffffff;
+}
+
 .execution-result {
-  margin-top: 10px;
-  background: #111;
-  color: #0f0;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #cfcfcf;
+  overflow-y: auto;
 }
 
 .execution-result pre {
-  white-space: pre-wrap;
+  background: #111;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
 }
 
 /* =========================
    RESPONSIVE
 ========================= */
 
-/* Tablet */
 @media (max-width: 1024px) {
   .problem-details {
     flex-direction: column;
@@ -160,13 +197,8 @@
     border-right: none;
     border-bottom: 1px solid #2d2d2d;
   }
-
-  .editor-wrapper {
-    min-height: 320px;
-  }
 }
 
-/* Mobile */
 @media (max-width: 600px) {
   .problem-left,
   .problem-right {
@@ -186,18 +218,9 @@
   .run-submit-buttons button {
     flex: 1;
   }
-
-  .editor-wrapper {
-    min-height: 260px;
-  }
 }
 
-/* Very small screens */
 @media (max-width: 400px) {
-  .editor-wrapper {
-    min-height: 220px;
-  }
-
   .run-submit-buttons {
     flex-direction: column;
   }
