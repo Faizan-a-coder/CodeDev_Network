@@ -24,7 +24,7 @@ const SubmissionSchema=new Schema({
     },
     verdict:{
         type:String,
-        enum:["AC","WA","TLE","RE"],
+        enum: ["AC","WA","TLE","RE","CE"],
         required:true
     },
     executionTime:{
