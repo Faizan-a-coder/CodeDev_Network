@@ -1,10 +1,13 @@
 import Problem from '../models/Problem.js';
 import Submission from '../models/Submission.js';
 import axios from 'axios';
-import { mapJudge0Verdict } from '../config/verdictMapper.js';
 import { languageMap } from '../config/languages.js';
 import { JUDGE0_URL } from '../config/judgeUrl.js';
 
+
+const normalize = (str) => {
+  return (str || "").trim().replace(/\s+/g, " ");
+};
 
 const createSubmission = async (req, res) => {
   try {
@@ -38,9 +41,9 @@ const createSubmission = async (req, res) => {
 
     let verdict = "AC";
     let executionTime = 0;
+    const outputs = [];
 
     for (const testcase of problem.testCases) {
-
       const judgeResponse = await axios.post(
         JUDGE0_URL,
         {
@@ -56,23 +59,58 @@ const createSubmission = async (req, res) => {
       );
 
       const result = judgeResponse.data;
+      const statusId = result?.status?.id;
 
-      executionTime = Math.max(executionTime, result.time || 0);
+      executionTime = Math.max(
+        executionTime,
+        parseFloat(result?.time) || 0
+      );
 
-      // judge runtime/compile errors
-      if (result.status.description !== "Accepted") {
-        verdict = mapJudge0Verdict(result.status.description);
-        break;
+      const actualOutput = normalize(result.stdout);
+      const expectedOutput = normalize(testcase.output);
+
+      let testcaseStatus = "Accepted";
+
+      // CE
+      if (statusId === 6) {
+        testcaseStatus = "CE";
+        verdict = "CE";
+      }
+      // TLE
+      else if (statusId === 5) {
+        testcaseStatus = "TLE";
+        verdict = "TLE";
+      }
+      // RE
+      else if (statusId >= 7 && statusId <= 12) {
+        testcaseStatus = "RE";
+        verdict = "RE";
+      }
+      // Successful execution → compare
+      else if (statusId === 3) {
+        if (actualOutput !== expectedOutput) {
+          testcaseStatus = "Wrong Answer";
+          verdict = "WA";
+        }
+      }
+      // Unknown
+      else {
+        testcaseStatus = "Error";
+        verdict = "RE";
       }
 
-      // compare outputs
-      const actualOutput = (result.stdout || "").trim();
-      const expectedOutput = testcase.output.trim();
+      //PUSH RESULT (YOU MISSED THIS)
+      outputs.push({
+        input: testcase.input,
+        expectedOutput,
+        actualOutput,
+        status: testcaseStatus,
+        executionTime: result.time || 0,
+        memoryUsed: result.memory || 0
+      });
 
-      if (actualOutput !== expectedOutput) {
-        verdict = "WA";
-        break;
-      }
+      // stop early if failed
+      if (verdict !== "AC") break;
     }
 
     const newSubmission = await Submission.create({
@@ -84,17 +122,19 @@ const createSubmission = async (req, res) => {
       executionTime
     });
 
-    res.status(201).json({
+    //RETURN OUTPUT (YOU MISSED THIS TOO)
+    return res.status(201).json({
       success: true,
       verdict,
       executionTime,
+      output: outputs,
       submission: newSubmission
     });
 
   } catch (err) {
     console.error(err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal server error"
     });

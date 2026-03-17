@@ -26,8 +26,8 @@ export default function ProblemDetails() {
   const [loading, setLoading] = useState(true);
 
   //state variables for storing the status of code and result of the code 
+  const [results, setResults] = useState([]);
   const [verdict, setVerdict] = useState(null);
-  const [output, setOutput] = useState("");
   const [running, setRunning] = useState(false);
 
 
@@ -76,12 +76,12 @@ export default function ProblemDetails() {
       const response = await createSubmission(url, payload, token);
 
       setVerdict(response.verdict);
-      setOutput(`Execution Time: ${response.executionTime}s`);
+      setResults(response.output || []);   //important
 
     } catch (error) {
       console.error(error);
       setVerdict("Error");
-      setOutput("Something went wrong");
+      setResults([]);
     } finally {
       setRunning(false);
     }
@@ -101,12 +101,12 @@ export default function ProblemDetails() {
       const response = await runCode(url, payload, token);
 
       setVerdict(response.verdict);
-      setOutput(`Execution Time: ${response.executionTime}s`);
+      setResults(response.output || []);   //important
 
     } catch (error) {
       console.error(error);
       setVerdict("Error");
-      setOutput("Something went wrong");
+      setResults([]);
     } finally {
       setRunning(false);
     }
@@ -194,10 +194,31 @@ export default function ProblemDetails() {
             <div className="execution-result">
               {running && <p>Running...</p>}
 
-              {verdict && !running && (
+              {!running && results.length > 0 && (
                 <>
                   <h3>Verdict: {verdict}</h3>
-                  <pre>{output}</pre>
+
+                  <div className="results-submit">
+                    {results.map((res, index) => (
+                      <div key={index} className="result-card">
+                        <h4>Test Case {index + 1}</h4>
+
+                        <p><strong>Status:</strong> {res.status}</p>
+
+                        <p><strong>Input:</strong></p>
+                        <pre>{res.input}</pre>
+
+                        <p><strong>Expected Output:</strong></p>
+                        <pre>{res.expectedOutput}</pre>
+
+                        <p><strong>Your Output:</strong></p>
+                        <pre>{res.actualOutput}</pre>
+
+                        <p><strong>Time:</strong> {res.executionTime}s</p>
+                        <p><strong>Memory:</strong> {res.memoryUsed} KB</p>
+                      </div>
+                    ))}
+                  </div>
                 </>
               )}
             </div>
