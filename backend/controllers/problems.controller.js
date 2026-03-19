@@ -152,7 +152,7 @@ const updateProblem = async (req,res)=>{
         }
 
         //updating the given fields
-        const updatedProblem = await Problem.findByIdAndUpdate(id,updates,{new:true}).select("-testCases");
+        const updatedProblem = await Problem.findByIdAndUpdate(id,updates,{returnDocument: 'after'}).select("-testCases");
 
         //returning if problem with given id (id) not found
         if(!updatedProblem){
