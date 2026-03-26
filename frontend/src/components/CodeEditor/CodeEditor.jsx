@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
 
-export default function CodeEditor({ language, code, setCode }) {
+export default function CodeEditor({ language, code, setCode, readOnly = false }) {
   const containerRef = useRef(null);
   const [editorHeight, setEditorHeight] = useState("400px");
 
@@ -32,6 +32,7 @@ export default function CodeEditor({ language, code, setCode }) {
           minimap: { enabled: false },
           automaticLayout: true,
           scrollBeyondLastLine: false,
+          readOnly: readOnly,
         }}
       />
     </div>

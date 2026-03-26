@@ -28,6 +28,7 @@ export default function ProblemDetails() {
   //state variables for tabs and submissions
   const [activeTab, setActiveTab] = useState("description");
   const [submission,setSubmissions] = useState([]);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
   // const [submission, setSubmission] = useState([
   //   {
   //     _id: "1",
@@ -201,7 +202,12 @@ export default function ProblemDetails() {
             {submission.length > 0 ? (
               <div className="submissions-list">
                 {submission.map((sub, idx) => (
-                  <div className="submission-card" key={idx}>
+                  <div 
+                    className={`submission-card ${selectedSubmission?._id === sub._id ? "selected" : ""}`} 
+                    key={idx}
+                    onClick={() => setSelectedSubmission(sub)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <div className="submission-header">
                       <span className={`verdict verdict-${sub.verdict}`}>{sub.verdict}</span>
                       <span className="language">{sub.language}</span>
@@ -222,9 +228,35 @@ export default function ProblemDetails() {
 
       {/* Right */}
       <div className="problem-right">
-        <div className="toolbar">
-          <select
-            value={language}
+        {/* Submission Code View */}
+        <div style={{ display: selectedSubmission ? "flex" : "none", flexDirection: "column", flex: 1 }}>
+          {selectedSubmission && (
+            <>
+              <div className="submission-code-header">
+                <h2>Submission Code ({selectedSubmission.language})</h2>
+                <button 
+                  className="close-result" 
+                  onClick={() => setSelectedSubmission(null)}
+                >
+                  Close
+                </button>
+              </div>
+              <CodeEditor 
+                key="submission-editor"
+                language={selectedSubmission.language} 
+                code={selectedSubmission.code || ""} 
+                setCode={() => {}} 
+                readOnly={true} 
+              />
+            </>
+          )}
+        </div>
+
+        {/* Main Editor View */}
+        <div style={{ display: !selectedSubmission ? "flex" : "none", flexDirection: "column", flex: 1 }}>
+            <div className="toolbar">
+              <select
+                value={language}
             onChange={(e) => setLanguage(e.target.value)}
           >
             <option value="java">Java</option>
@@ -302,6 +334,7 @@ export default function ProblemDetails() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
