@@ -16,6 +16,103 @@
   border-right: 1px solid #2d2d2d;
   padding: 20px 24px;
   color: #cfcfcf;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   TABS & SUBMISSIONS
+========================= */
+
+.tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #2d2d2d;
+  padding-bottom: 10px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: #8c8c8c;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 4px;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.tab-btn:hover {
+  color: #cfcfcf;
+}
+
+.tab-btn.active {
+  color: #fff;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #ffa116;
+}
+
+.tab-content {
+  flex: 1;
+}
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.submission-card {
+  background: #2d2d2d;
+  border-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.submission-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #a0a0a0;
+}
+
+.verdict {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.verdict-AC {
+  color: #2cbb5d;
+}
+
+.verdict-WA, .verdict-RE, .verdict-CE {
+  color: #ef4743;
+}
+
+.verdict-TLE {
+  color: #ffa116;
 }
 
 /* RIGHT PANEL */

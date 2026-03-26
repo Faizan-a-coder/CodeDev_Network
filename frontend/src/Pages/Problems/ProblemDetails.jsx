@@ -25,6 +25,25 @@ export default function ProblemDetails() {
   //state variable for loader
   const [loading, setLoading] = useState(true);
 
+  //state variables for tabs and submissions
+  const [activeTab, setActiveTab] = useState("description");
+  const [submission, setSubmission] = useState([
+    {
+      _id: "1",
+      language: "java",
+      verdict: "AC",
+      executionTime: 0.05,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      _id: "2",
+      language: "cpp",
+      verdict: "WA",
+      executionTime: 0.02,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+  ]);
+
   //state variables for storing the status of code and result of the code 
   const [results, setResults] = useState([]);
   const [verdict, setVerdict] = useState(null);
@@ -122,24 +141,66 @@ export default function ProblemDetails() {
     <div className="problem-details">
       {/* Left */}
       <div className="problem-left">
-        <h1>{problemDetail.title}</h1>
-        <p>{problemDetail.description}</p>
-
-        {problemDetail?.testCases?.map((test, index) => (
-          <div className="testCase" key={index}>
-            <h2>Input: {test.input}</h2>
-            <p>Output: {test.output}</p>
-          </div>
-        ))}
-
-        <span>Topic Tags:</span>
-        {problemDetail?.tags?.map((tag, index) => (
-          <span className="tag" key={index}>{tag}</span>
-        ))}
-
-        <div className="constraints">
-          Constraints: {problemDetail.constraints}
+        <div className="tabs">
+          <button 
+            className={`tab-btn ${activeTab === "description" ? "active" : ""}`}
+            onClick={() => setActiveTab("description")}
+          >
+            Description
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === "submissions" ? "active" : ""}`}
+            onClick={() => setActiveTab("submissions")}
+          >
+            Submissions
+          </button>
         </div>
+
+        {activeTab === "description" && (
+          <div className="tab-content description-content">
+            <h1>{problemDetail.title}</h1>
+            <p>{problemDetail.description}</p>
+
+            {problemDetail?.testCases?.map((test, index) => (
+              <div className="testCase" key={index}>
+                <h2>Input: {test.input}</h2>
+                <p>Output: {test.output}</p>
+              </div>
+            ))}
+
+            <span>Topic Tags:</span>
+            {problemDetail?.tags?.map((tag, index) => (
+              <span className="tag" key={index}>{tag}</span>
+            ))}
+
+            <div className="constraints">
+              Constraints: {problemDetail.constraints}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "submissions" && (
+          <div className="tab-content submissions-content">
+            {submission.length > 0 ? (
+              <div className="submissions-list">
+                {submission.map((sub, idx) => (
+                  <div className="submission-card" key={idx}>
+                    <div className="submission-header">
+                      <span className={`verdict verdict-${sub.verdict}`}>{sub.verdict}</span>
+                      <span className="language">{sub.language}</span>
+                    </div>
+                    <div className="submission-body">
+                      <span>Time: {sub.executionTime}s</span>
+                      <span>{new Date(sub.createdAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No submissions yet.</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Right */}
