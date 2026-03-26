@@ -222,7 +222,7 @@ const getAllSubmissionsOfaProblem = async (req, res) => {
     }
 
     //finding the submissions attached with the problem
-    const submission = await Submission.find({ problemId: problem._id, userId: req.user.id }).sort({ createdAt: -1 }).select("-code");
+    const submission = await Submission.find({ problemId: problem._id, userId: req.user.id }).sort({ createdAt: -1 })
 
     //checking if submission exists or not
     if (submission.length === 0) {

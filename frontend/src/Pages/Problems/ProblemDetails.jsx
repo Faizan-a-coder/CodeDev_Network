@@ -7,7 +7,7 @@ import "./ProblemDetails.css";
 import { createSubmission } from "../../api/submission.api";
 import Spinner from "../../components/Spinner/Spinner.jsx";
 import runCode from "../../api/codeRunner.api.js";
-
+import { getAllSubmissionsOfAProblem } from "../../api/submission.api.js";
 
 export default function ProblemDetails() {
   //fetching url from context api
@@ -48,9 +48,10 @@ export default function ProblemDetails() {
   const [results, setResults] = useState([]);
   const [verdict, setVerdict] = useState(null);
   const [running, setRunning] = useState(false);
-
-
   const [showResult, setShowResult] = useState(false);
+
+  //state variable to store submissions of the problem for the user
+  const [submissions,setSubmissions] = useState([]);
 
   //function to call the problem details api
   const fetchProblemDetails = async () => {
@@ -131,6 +132,22 @@ export default function ProblemDetails() {
     }
   };
 
+  //calling the api to fetch submissions of the problem for the user
+  useEffect(()=>{
+    const fetchSubmissions = async()=>{
+      try {
+        const response = await getAllSubmissionsOfAProblem(url,slug,token);
+        setSubmissions(response.data);
+        console.log(response.data[0].code);
+        //console.log(response);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchSubmissions();
+  },[slug])
+
 
   // Spinner
   if (loading) {
@@ -140,6 +157,7 @@ export default function ProblemDetails() {
   return (
     <div className="problem-details">
       {/* Left */}
+      <div>{submissions.length > 0 && <p>{submissions[0].code}</p>}</div>
       <div className="problem-left">
         <div className="tabs">
           <button 
