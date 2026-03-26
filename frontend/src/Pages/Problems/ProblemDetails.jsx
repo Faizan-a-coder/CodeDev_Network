@@ -27,22 +27,23 @@ export default function ProblemDetails() {
 
   //state variables for tabs and submissions
   const [activeTab, setActiveTab] = useState("description");
-  const [submission, setSubmission] = useState([
-    {
-      _id: "1",
-      language: "java",
-      verdict: "AC",
-      executionTime: 0.05,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: "2",
-      language: "cpp",
-      verdict: "WA",
-      executionTime: 0.02,
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ]);
+  const [submission,setSubmissions] = useState([]);
+  // const [submission, setSubmission] = useState([
+  //   {
+  //     _id: "1",
+  //     language: "java",
+  //     verdict: "AC",
+  //     executionTime: 0.05,
+  //     createdAt: new Date().toISOString(),
+  //   },
+  //   {
+  //     _id: "2",
+  //     language: "cpp",
+  //     verdict: "WA",
+  //     executionTime: 0.02,
+  //     createdAt: new Date(Date.now() - 86400000).toISOString(),
+  //   },
+  // ]);
 
   //state variables for storing the status of code and result of the code 
   const [results, setResults] = useState([]);
@@ -50,8 +51,7 @@ export default function ProblemDetails() {
   const [running, setRunning] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
-  //state variable to store submissions of the problem for the user
-  const [submissions,setSubmissions] = useState([]);
+
 
   //function to call the problem details api
   const fetchProblemDetails = async () => {
@@ -157,7 +157,6 @@ export default function ProblemDetails() {
   return (
     <div className="problem-details">
       {/* Left */}
-      <div>{submissions.length > 0 && <p>{submissions[0].code}</p>}</div>
       <div className="problem-left">
         <div className="tabs">
           <button 
