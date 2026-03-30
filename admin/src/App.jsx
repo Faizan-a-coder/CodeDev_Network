@@ -1,9 +1,39 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { Context } from './context/AuthContext';
+import AdminLogin from './Pages/Auth/AdminLogin';
+import AdminRegister from './Pages/Auth/AdminRegister';
+import Dashboard from './Pages/Dashboard/Dashboard';
+import UsersManage from './Pages/Users/UsersManage';
+import ProblemsManage from './Pages/Problems/ProblemsManage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+const ProtectedRoute = ({ children }) => {
+  const { token, user } = useContext(Context);
+  if (!token || user?.role !== 'admin') {
+    return <Navigate to="/admin/login" />;
+  }
+  return children;
+};
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
-  
   return (
     <>
-    <h1>Admin</h1>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <Routes>
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/register" element={<AdminRegister />} />
+        
+        <Route path="/admin/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+          <Route index element={<Navigate to="users" />} />
+          <Route path="users" element={<UsersManage />} />
+          <Route path="problems" element={<ProblemsManage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/admin/dashboard" />} />
+      </Routes>
     </>
   )
 }
