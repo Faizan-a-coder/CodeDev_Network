@@ -1,33 +1,36 @@
-import express from 'express';
-import cors from 'cors';
-import authRouter from './routes/auth.routes.js';
-import problemsRouter from './routes/problem.routes.js';
-import submissionRouter from './routes/submission.routes.js';
-import syncRouter from './routes/sync.routes.js';
-import leaderBoardRouter from './routes/leaderboard.routes.js';
-import adminRouter from './routes/admin.routes.js';
-import "./workers/sync.worker.js";
-import getProfileRouter from './routes/profile.routes.js';
-const app = express();
+import express from 'express'
+import cors from 'cors'
+import authRouter from './routes/auth.routes.js'
+import problemsRouter from './routes/problem.routes.js'
+import submissionRouter from './routes/submission.routes.js'
+import syncRouter from './routes/sync.routes.js'
+import leaderBoardRouter from './routes/leaderboard.routes.js'
+import adminRouter from './routes/admin.routes.js'
+import contestRouter from './routes/contest.routes.js'
+import "./workers/sync.worker.js"
+import getProfileRouter from './routes/profile.routes.js'
+const app = express()
 
-app.use(express.json());
-app.use(cors());
+
+app.use(express.json())
+app.use(cors())
 
 //******************************************************************//
 //routes
 //******************************************************************//
-app.use('/api/auth',authRouter);//authentication routes
-app.use('/api/problems',problemsRouter);//problems route
-app.use('/api/submissions',submissionRouter);//submissions route
-app.use('/api/sync',syncRouter);//sync route
-app.use('/api/leaderboard',leaderBoardRouter);//leaderboard route
-app.use('/api/getProfile',getProfileRouter);//profile route
-app.use('/api/admin',adminRouter);//admin routes
+app.use('/api/auth',authRouter)//authentication routes
+app.use('/api/problems',problemsRouter)//problems route
+app.use('/api/submissions',submissionRouter)//submissions route
+app.use('/api/sync',syncRouter)//sync route
+app.use('/api/leaderboard',leaderBoardRouter)//leaderboard route
+app.use('/api/getProfile',getProfileRouter)//profile route
+app.use('/api/admin',adminRouter)//admin routes
+app.use('/api/contest',contestRouter);//contest routes
 
 //health monitoring route
 app.get('/api/health',(req,res)=>{
-  console.log("Health check request received");
-  res.send("OK");
+  console.log("Health check request received")
+  res.send("OK")
 });
 
-export default app;
+export default app
