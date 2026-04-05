@@ -67,6 +67,11 @@ const ProblemSchema = new Schema(
       lowercase: true,
       trim: true
     },
+    type: {
+      type: String,
+      enum: ["problem-set", "contest-set"],
+      default: "problem-set"
+    },
     timeLimit: {
       type: Number,
       default: 2

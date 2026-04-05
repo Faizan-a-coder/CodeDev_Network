@@ -9,6 +9,14 @@ const ContestSchema = new Schema(
       required: true,
       trim: true,
     },
+    slug: {
+      type: String,
+      unique: true,
+      index: true,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
     problems: [
       {
         problemId: {
