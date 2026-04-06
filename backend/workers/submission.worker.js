@@ -1,0 +1,204 @@
+import { Worker } from "bullmq";
+import axios from "axios";
+import Problem from "../models/Problem.js";
+import { JUDGE0_URL } from "../config/judgeUrl.js";
+import Submission from "../models/Submission.js";
+import { languageMap } from "../config/languages.js";
+
+const normalize = (str) => {
+    return (str || "").trim().replace(/\s+/g, " ");
+}; 
+
+const submissionWorker = new Worker("submissionQueue", async (job) => {
+    const { problemId, code, language,userId, type } = job.data;
+    const problem = await Problem.findById(problemId);
+    const language_id = languageMap[language];
+    if (type === "submission") {
+        let verdict = "AC";
+        let executionTime = 0;
+        const outputs = [];
+
+        for (const testcase of problem.testCases) {
+            const judgeResponse = await axios.post(
+                JUDGE0_URL,
+                {
+                    source_code: code,
+                    language_id,
+                    stdin: testcase.input,
+                    cpu_time_limit: problem.timeLimit,
+                    memory_limit: problem.memoryLimit
+                },
+                {
+                    headers: { "Content-Type": "application/json" }
+                }
+            );
+
+            const result = judgeResponse.data;
+            const statusId = result?.status?.id;
+
+            executionTime = Math.max(
+                executionTime,
+                parseFloat(result?.time) || 0
+            );
+
+            const actualOutput = normalize(result.stdout);
+            const expectedOutput = normalize(testcase.output);
+
+            let testcaseStatus = "Accepted";
+
+            // CE
+            if (statusId === 6) {
+                testcaseStatus = "CE";
+                verdict = "CE";
+            }
+            // TLE
+            else if (statusId === 5) {
+                testcaseStatus = "TLE";
+                verdict = "TLE";
+            }
+            // RE
+            else if (statusId >= 7 && statusId <= 12) {
+                testcaseStatus = "RE";
+                verdict = "RE";
+            }
+            // Successful execution → compare
+            else if (statusId === 3) {
+                if (actualOutput !== expectedOutput) {
+                    testcaseStatus = "Wrong Answer";
+                    verdict = "WA";
+                }
+            }
+            // Unknown
+            else {
+                testcaseStatus = "Error";
+                verdict = "RE";
+            }
+
+            //PUSH RESULT (YOU MISSED THIS)
+            outputs.push({
+                input: testcase.input,
+                expectedOutput,
+                actualOutput,
+                status: testcaseStatus,
+                executionTime: result.time || 0,
+                memoryUsed: result.memory || 0
+            });
+
+            // stop early if failed
+            if (verdict !== "AC") break;
+        }
+
+        const newSubmission = await Submission.create({
+            userId,
+            problemId,
+            code,
+            language,
+            verdict,
+            executionTime
+        });
+
+        console.log(`Processed submission ${newSubmission._id} with verdict ${verdict}`);
+
+        return newSubmission;
+    } else if (type === "runTest") {
+        // Similar logic for running a single test case without saving the submission
+        // This can be used for "Run Code" feature in the frontend
+        const sampleTestcases = problem.testCases.filter(tc => tc.isSample);
+
+        let outputs = [];
+        let executionTime = 0;
+        let overallVerdict = "AC";
+
+        for (const testcase of sampleTestcases) {
+            const judgeResponse = await axios.post(
+                JUDGE0_URL,
+                {
+                    source_code: code,
+                    language_id,
+                    stdin: testcase.input,
+                    cpu_time_limit: problem.timeLimit,
+                    memory_limit: problem.memoryLimit
+                },
+                {
+                    headers: { "Content-Type": "application/json" }
+                }
+            );
+
+            const result = judgeResponse.data;
+            const statusId = result?.status?.id;
+
+            executionTime = Math.max(
+                executionTime,
+                parseFloat(result?.time) || 0
+            );
+
+            const actualOutput = normalize(result.stdout);
+            const expectedOutput = normalize(testcase.output);
+
+            let testcaseStatus = "Passed";
+
+            // Compilation Error
+            if (statusId === 6) {
+                testcaseStatus = "CE";
+                overallVerdict = "CE";
+            }
+
+            // Time Limit Exceeded
+            else if (statusId === 5) {
+                testcaseStatus = "TLE";
+                overallVerdict = "TLE";
+            }
+
+            // Runtime Errors
+            else if (statusId >= 7 && statusId <= 12) {
+                testcaseStatus = "RE";
+                overallVerdict = "RE";
+            }
+
+            // Successful execution → compare output
+            else if (statusId === 3) {
+                if (actualOutput !== expectedOutput) {
+                    testcaseStatus = "Failed";
+                    overallVerdict = "WA";
+                }
+            }
+
+            // Unknown case
+            else {
+                testcaseStatus = "Error";
+                overallVerdict = "RE";
+            }
+
+            outputs.push({
+                input: testcase.input,
+                expectedOutput,
+                actualOutput,
+                status: testcaseStatus,
+                executionTime: result.time || 0,
+                memoryUsed: result.memory || 0
+            });
+
+            // Stop early on serious errors (optional but better UX)
+            if (overallVerdict !== "AC") break;
+        }
+
+        return outputs;
+
+    }
+
+}, {
+    connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || 6379,
+    },
+})
+
+submissionWorker.on("completed", (job, result) => {
+    console.log(`Job ${job.id} completed with result:`, result);
+});
+
+submissionWorker.on("failed", (job, err) => {
+    console.error(`Job ${job.id} failed with error:`, err);
+});
+
+export default submissionWorker;

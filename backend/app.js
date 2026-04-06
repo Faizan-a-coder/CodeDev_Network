@@ -8,6 +8,7 @@ import leaderBoardRouter from './routes/leaderboard.routes.js'
 import adminRouter from './routes/admin.routes.js'
 import contestRouter from './routes/contest.routes.js'
 import "./workers/sync.worker.js"
+import "./workers/submission.worker.js"
 import getProfileRouter from './routes/profile.routes.js'
 const app = express()
 

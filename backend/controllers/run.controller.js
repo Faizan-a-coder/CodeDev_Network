@@ -2,6 +2,7 @@ import Problem from "../models/Problem.js";
 import { languageMap } from "../config/languages.js";
 import axios from "axios";
 import { JUDGE0_URL } from "../config/judgeUrl.js";
+import submissionQueue from "../services/bullMQ.queue.js";
 
 
 const normalize = (str) => {
@@ -37,90 +38,16 @@ const codeRunner = async (req, res) => {
       });
     }
 
-    const sampleTestcases = problem.testCases.filter(tc => tc.isSample);
+    await submissionQueue.add('runSubmission', {
+      problemId,
+      code,
+      language,
+      type:"runTest"
+    });
 
-    let outputs = [];
-    let executionTime = 0;
-    let overallVerdict = "AC";
-
-    for (const testcase of sampleTestcases) {
-      const judgeResponse = await axios.post(
-        JUDGE0_URL,
-        {
-          source_code: code,
-          language_id,
-          stdin: testcase.input,
-          cpu_time_limit: problem.timeLimit,
-          memory_limit: problem.memoryLimit
-        },
-        {
-          headers: { "Content-Type": "application/json" }
-        }
-      );
-
-      const result = judgeResponse.data;
-      const statusId = result?.status?.id;
-
-      executionTime = Math.max(
-        executionTime,
-        parseFloat(result?.time) || 0
-      );
-
-      const actualOutput = normalize(result.stdout);
-      const expectedOutput = normalize(testcase.output);
-
-      let testcaseStatus = "Passed";
-
-      // Compilation Error
-      if (statusId === 6) {
-        testcaseStatus = "CE";
-        overallVerdict = "CE";
-      }
-
-      // Time Limit Exceeded
-      else if (statusId === 5) {
-        testcaseStatus = "TLE";
-        overallVerdict = "TLE";
-      }
-
-      // Runtime Errors
-      else if (statusId >= 7 && statusId <= 12) {
-        testcaseStatus = "RE";
-        overallVerdict = "RE";
-      }
-
-      // Successful execution → compare output
-      else if (statusId === 3) {
-        if (actualOutput !== expectedOutput) {
-          testcaseStatus = "Failed";
-          overallVerdict = "WA";
-        }
-      }
-
-      // Unknown case
-      else {
-        testcaseStatus = "Error";
-        overallVerdict = "RE";
-      }
-
-      outputs.push({
-        input: testcase.input,
-        expectedOutput,
-        actualOutput,
-        status: testcaseStatus,
-        executionTime: result.time || 0,
-        memoryUsed: result.memory || 0
-      });
-
-      // Stop early on serious errors (optional but better UX)
-      if (overallVerdict !== "AC") break;
-    }
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      verdict: overallVerdict,
-      executionTime,
-      output: outputs
+      message: "Code is being executed"
     });
 
   } catch (err) {

@@ -3,6 +3,7 @@ import Submission from '../models/Submission.js';
 import axios from 'axios';
 import { languageMap } from '../config/languages.js';
 import { JUDGE0_URL } from '../config/judgeUrl.js';
+import submissionQueue from '../services/bullMQ.queue.js';
 
 
 const normalize = (str) => {
@@ -21,6 +22,7 @@ const createSubmission = async (req, res) => {
       });
     }
 
+    console.log("reques received");
     const problem = await Problem.findById(problemId);
 
     if (!problem) {
@@ -39,96 +41,19 @@ const createSubmission = async (req, res) => {
       });
     }
 
-    let verdict = "AC";
-    let executionTime = 0;
-    const outputs = [];
-
-    for (const testcase of problem.testCases) {
-      const judgeResponse = await axios.post(
-        JUDGE0_URL,
-        {
-          source_code: code,
-          language_id,
-          stdin: testcase.input,
-          cpu_time_limit: problem.timeLimit,
-          memory_limit: problem.memoryLimit
-        },
-        {
-          headers: { "Content-Type": "application/json" }
-        }
-      );
-
-      const result = judgeResponse.data;
-      const statusId = result?.status?.id;
-
-      executionTime = Math.max(
-        executionTime,
-        parseFloat(result?.time) || 0
-      );
-
-      const actualOutput = normalize(result.stdout);
-      const expectedOutput = normalize(testcase.output);
-
-      let testcaseStatus = "Accepted";
-
-      // CE
-      if (statusId === 6) {
-        testcaseStatus = "CE";
-        verdict = "CE";
-      }
-      // TLE
-      else if (statusId === 5) {
-        testcaseStatus = "TLE";
-        verdict = "TLE";
-      }
-      // RE
-      else if (statusId >= 7 && statusId <= 12) {
-        testcaseStatus = "RE";
-        verdict = "RE";
-      }
-      // Successful execution → compare
-      else if (statusId === 3) {
-        if (actualOutput !== expectedOutput) {
-          testcaseStatus = "Wrong Answer";
-          verdict = "WA";
-        }
-      }
-      // Unknown
-      else {
-        testcaseStatus = "Error";
-        verdict = "RE";
-      }
-
-      //PUSH RESULT (YOU MISSED THIS)
-      outputs.push({
-        input: testcase.input,
-        expectedOutput,
-        actualOutput,
-        status: testcaseStatus,
-        executionTime: result.time || 0,
-        memoryUsed: result.memory || 0
-      });
-
-      // stop early if failed
-      if (verdict !== "AC") break;
-    }
-
-    const newSubmission = await Submission.create({
-      userId,
+    //adding the submission to the queue for processing
+    await submissionQueue.add('runSubmission', {
       problemId,
       code,
       language,
-      verdict,
-      executionTime
+      userId,
+      type:"submission"
     });
 
-    //RETURN OUTPUT (YOU MISSED THIS TOO)
-    return res.status(201).json({
+    //returning the response
+    res.status(200).json({
       success: true,
-      verdict,
-      executionTime,
-      output: outputs,
-      submission: newSubmission
+      message: "Submission received and is being processed"
     });
 
   } catch (err) {
