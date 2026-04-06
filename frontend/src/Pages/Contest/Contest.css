@@ -2,54 +2,166 @@
    PAGE
 ========================= */
 .contest-page {
-  min-height: 92vh;
-  background: #1b1b1b;
+  min-height: 100vh;
+  padding: 80px 20px 40px;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 80px 20px;
   color: #cfcfcf;
 }
 
-/* =========================
-   CARD
-========================= */
-.contest-card {
-  max-width: 600px;
+.contest-container {
   width: 100%;
-  background: #2d2d2d;
-  padding: 40px 32px;
-  border-radius: 14px;
-  text-align: center;
+  max-width: 1100px;
 }
 
-/* Title */
-.contest-card h1 {
+.page-title {
   font-size: 28px;
-  font-weight: 800;
-  margin-bottom: 12px;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: #ffffff;
 }
 
-/* Subtitle */
-.contest-subtitle {
-  font-size: 16px;
+/* =========================
+   SECTIONS
+========================= */
+.contest-section {
+  margin-bottom: 48px;
+}
+
+.contest-section h2 {
+  font-size: 20px;
   font-weight: 600;
-  color: #ffa116;
   margin-bottom: 20px;
+  color: #ffa116;
+  border-bottom: 1px solid #3d3d3d;
+  padding-bottom: 8px;
 }
 
-/* Description */
-.contest-description {
-  font-size: 15px;
-  line-height: 1.6;
-  opacity: 0.9;
-  margin-bottom: 28px;
+/* =========================
+   LIST & CARDS
+========================= */
+.contest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* Note */
-.contest-note {
+.contest-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2d2d2d;
+  padding: 20px 24px;
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contest-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Title row with inline registered badge */
+.contest-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.contest-title-row h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.contest-time {
   font-size: 14px;
-  opacity: 0.75;
+  color: #a0a0a0;
+  margin-bottom: 2px;
+}
+
+/* =========================
+   REGISTERED BADGE
+========================= */
+.registered-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4caf87;
+  background: rgba(76, 175, 135, 0.12);
+  border: 1px solid rgba(76, 175, 135, 0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+.contest-action .btn-primary,
+.contest-action .btn-secondary,
+.contest-action .btn-unregister {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-block;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.contest-action .btn-primary {
+  background: #ffa116;
+  color: #ffffff;
+}
+
+.contest-action .btn-primary:hover:not(:disabled) {
+  background: #e58e0d;
+}
+
+.contest-action .btn-secondary {
+  background: transparent;
+  border: 1px solid #cfcfcf;
+  color: #cfcfcf;
+}
+
+.contest-action .btn-secondary:hover {
+  border-color: #ffa116;
+  color: #ffa116;
+}
+
+/* Unregister toggle button */
+.contest-action .btn-unregister {
+  background: transparent;
+  border: 1px solid #f28b82;
+  color: #f28b82;
+}
+
+.contest-action .btn-unregister:hover:not(:disabled) {
+  background: rgba(242, 139, 130, 0.1);
+}
+
+.contest-action button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   MISC
+========================= */
+.empty-msg {
+  font-size: 15px;
+  color: #a0a0a0;
+  background: #2d2d2d;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
 }
 
 /* =========================
@@ -57,10 +169,18 @@
 ========================= */
 @media (max-width: 600px) {
   .contest-card {
-    padding: 32px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
 
-  .contest-card h1 {
-    font-size: 24px;
+  .contest-action {
+    width: 100%;
+  }
+
+  .contest-action button,
+  .contest-action a {
+    width: 100%;
+    text-align: center;
   }
 }

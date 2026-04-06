@@ -48,3 +48,20 @@ export const updateProblem = async (url, token, id, data) => {
 export const deleteProblem = async (url, token, id) => {
   return await axios.delete(`${url}/problems/${id}`, getHeaders(token));
 };
+
+// Contest Admin Logic
+export const getAllContests = async (url, token) => {
+  return await axios.get(`${url}/contest`, getHeaders(token));
+};
+
+export const createContest = async (url, token, data) => {
+  return await axios.post(`${url}/contest/create`, data, getHeaders(token));
+};
+
+export const updateContest = async (url, token, id, data) => {
+  return await axios.put(`${url}/contest/${id}`, data, getHeaders(token));
+};
+
+export const deleteContest = async (url, token, id) => {
+  return await axios.delete(`${url}/contest/${id}`, getHeaders(token));
+};

@@ -182,6 +182,50 @@ const joinContest = async (req, res) => {
   }
 };
 
+const leaveContest = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const userId = req.user.id;
+
+    if (!slug) {
+      return res.status(400).json({
+        success: false,
+        message: "Contest slug is required",
+      });
+    }
+
+    const contest = await Contest.findOne({ slug });
+    if (!contest) {
+      return res.status(404).json({ success: false, message: "Contest not found" });
+    }
+
+    // Can only leave upcoming contests
+    if (contest.status !== "upcoming") {
+      return res.status(400).json({
+        success: false,
+        message: "You can only unregister from upcoming contests",
+      });
+    }
+
+    await Contest.findOneAndUpdate(
+      { slug },
+      { $pull: { participants: userId } },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Successfully unregistered from the contest",
+    });
+  } catch (error) {
+    console.error("Leave Contest Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 const getContestProblems = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -247,4 +291,94 @@ const getContestProblems = async (req, res) => {
   }
 };
 
-export { createContest, getContest, joinContest, getContestProblems };
+const getAllContests = async (req, res) => {
+  try {
+    const now = new Date();
+
+    // Dynamically update status based on current time
+    await Contest.updateMany(
+      { status: "upcoming", startTime: { $lte: now } },
+      { $set: { status: "running" } }
+    );
+    await Contest.updateMany(
+      { status: "running", endTime: { $lte: now } },
+      { $set: { status: "ended" } }
+    );
+
+    const contests = await Contest.find()
+      .populate("createdBy", "username")
+      .select("-problems") // Exclude problems content for fetching list
+      .sort({ startTime: -1 });
+
+    return res.status(200).json({
+      success: true,
+      contests,
+    });
+  } catch (err) {
+    console.log(`An error occured while getting all contests: ${err.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const updateContest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, slug, problems, startTime, endTime } = req.body;
+
+    const contest = await Contest.findById(id);
+    if (!contest) {
+      return res.status(404).json({ success: false, message: "Contest not found" });
+    }
+
+    if (title) contest.title = title;
+    if (slug) contest.slug = slug;
+    if (startTime) contest.startTime = startTime;
+    if (endTime) contest.endTime = endTime;
+    
+    if (problems && Array.isArray(problems)) {
+        const isValidProblems = problems.every(
+          (p) => p.problemId && p.order !== undefined && p.points !== undefined,
+        );
+        if (!isValidProblems) {
+            return res.status(400).json({ success: false, message: "Invalid problems format" });
+        }
+        contest.problems = problems;
+    }
+
+    await contest.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Contest updated successfully",
+      contest
+    });
+
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: "Contest slug/title already exists" });
+    }
+    console.error("Update Contest Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const deleteContest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const deletedContest = await Contest.findByIdAndDelete(id);
+    if (!deletedContest) {
+      return res.status(404).json({ success: false, message: "Contest not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Contest deleted successfully" });
+  } catch (error) {
+    console.error("Delete Contest Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export { createContest, getContest, joinContest, leaveContest, getContestProblems, getAllContests, updateContest, deleteContest };
